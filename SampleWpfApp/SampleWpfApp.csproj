@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows10.0.26100.0</TargetFramework>
+		<SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
+		<FileVersion>2026.3.20.39555</FileVersion>
+		<OutputType>WinExe</OutputType>
+		<Company>MedWand Solutions, Inc.</Company>
+		<Product>Sample Use Only</Product>
+		<ApplicationIcon>Images\mwicon.ico</ApplicationIcon>
+		<AssemblyName>MedWand SDK WPF Sample App</AssemblyName>
+		<UseWPF>true</UseWPF>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Remove="Images\Buttons\camera-hover.png" />
+	  <None Remove="Images\Buttons\ecg-hover.png" />
+	  <None Remove="Images\Buttons\exit-off.png" />
+	  <None Remove="Images\Buttons\Otoscope\Dermatoscope-hover.png" />
+	  <None Remove="Images\Buttons\Otoscope\None-hover.png" />
+	  <None Remove="Images\Buttons\Otoscope\Otoscope-hover.png" />
+	  <None Remove="Images\Buttons\spo2-hover.png" />
+	  <None Remove="Images\Buttons\stethoscope-hover.png" />
+	  <None Remove="Images\Buttons\Stethoscope\Bowel-hover.png" />
+	  <None Remove="Images\Buttons\Stethoscope\Heart-hover.png" />
+	  <None Remove="Images\Buttons\Stethoscope\Lung-hover.png" />
+	  <None Remove="Images\Buttons\Stethoscope\None-hover.png" />
+	  <None Remove="Images\Buttons\summary-on.png" />
+	  <None Remove="Images\Buttons\temperature-hover.png" />
+	  <None Remove="Images\logo.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="MWSDK.Wpf" Version="3.0.1.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Images\mwicon.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Images\Buttons\camera-hover.png" />
+	  <Resource Include="Images\Buttons\ecg-hover.png" />
+	  <Resource Include="Images\Buttons\exit-off.png" />
+	  <Resource Include="Images\Buttons\Otoscope\Dermatoscope-hover.png" />
+	  <Resource Include="Images\Buttons\Otoscope\None-hover.png" />
+	  <Resource Include="Images\Buttons\Otoscope\Otoscope-hover.png" />
+	  <Resource Include="Images\Buttons\spo2-hover.png" />
+	  <Resource Include="Images\Buttons\stethoscope-hover.png" />
+	  <Resource Include="Images\Buttons\Stethoscope\Bowel-hover.png" />
+	  <Resource Include="Images\Buttons\Stethoscope\Heart-hover.png" />
+	  <Resource Include="Images\Buttons\Stethoscope\Lung-hover.png" />
+	  <Resource Include="Images\Buttons\Stethoscope\None-hover.png" />
+	  <Resource Include="Images\Buttons\summary-on.png" />
+	  <Resource Include="Images\Buttons\temperature-hover.png" />
+	  <Resource Include="Images\logo.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\CameraView.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+
+</Project>

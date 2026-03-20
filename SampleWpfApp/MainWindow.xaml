@@ -1,0 +1,99 @@
+﻿<Window x:Class="SampleWpfApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        WindowStartupLocation="CenterScreen"
+        Width="1400"
+        Height="980"
+        MinWidth="1400"
+        MinHeight="980"
+        Title="MedWand SDK Sample Application"
+        Background="{StaticResource ControlDarkBrush}"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True">
+
+    <DockPanel LastChildFill="True">
+        <ToolBarTray DockPanel.Dock="Top" IsLocked="True">
+            <ToolBar Background="{StaticResource ControlBrush}"
+                     SnapsToDevicePixels="True"
+                     UseLayoutRounding="True">
+                <Image Style="{StaticResource ImageLogoStyle}"
+                       Source="pack://application:,,,/Images/logo.png" />
+                <StackPanel Orientation="Horizontal" SnapsToDevicePixels="True">
+                    <Button Style="{StaticResource ImageOnlyButtonStyle}"
+                            Click="Thermometer_Click"
+                            IsEnabled="{Binding ToolButtonThermometerEnabled}"
+                            >
+                        <Image Source="pack://application:,,,/Images/Buttons/temperature-hover.png" />
+                    </Button>
+                    <Button Style="{StaticResource ImageOnlyButtonStyle}"
+                            Click="PulseOximeter_Click"
+                            IsEnabled="{Binding ToolButtonPulseOximeterEnabled}"
+                            >
+                        <Image Source="pack://application:,,,/Images/Buttons/spo2-hover.png" />
+                    </Button>
+                    <Button Style="{StaticResource ImageOnlyButtonStyle}"
+                            Click="Stethoscope_Click"
+                            IsEnabled="{Binding ToolButtonStethoscopeEnabled}"
+                            >
+                        <Image Source="pack://application:,,,/Images/Buttons/stethoscope-hover.png" />
+                    </Button>
+                    <Button Style="{StaticResource ImageOnlyButtonStyle}"
+                            Click="Camera_Click"
+                            IsEnabled="{Binding ToolButtonCameraEnabled}"
+                            >
+                        <Image Source="pack://application:,,,/Images/Buttons/camera-hover.png" />
+                    </Button>
+                    <Button Style="{StaticResource ImageOnlyButtonStyle}"
+                            Click="Ecg_Click"
+                            IsEnabled="{Binding ToolButtonEcgEnabled}"
+                            >
+                        <Image Source="pack://application:,,,/Images/Buttons/ecg-hover.png" />
+                    </Button>
+                    <Rectangle Width="1"
+                               Margin="15,0,0,0"
+                               Fill="Gray"
+                               VerticalAlignment="Stretch"
+                               SnapsToDevicePixels="True" />
+                    <Button Style="{StaticResource ImageOnlyButtonStyle}"
+                            Visibility="Hidden"
+                            IsHitTestVisible="False">
+                        <Image Source="pack://application:,,,/Images/Buttons/summary-on.png" />
+                    </Button>
+                    <Button Style="{StaticResource ImageOnlyButtonStyle}"
+                            Click="Exit_Click">
+                        <Image Source="pack://application:,,,/Images/Buttons/exit-off.png" />
+                    </Button>
+                </StackPanel>
+
+            </ToolBar>
+        </ToolBarTray>
+        <StatusBar DockPanel.Dock="Bottom"
+                   SnapsToDevicePixels="True">
+            <StatusBarItem Content="{Binding StatusMessage}"
+                           HorizontalAlignment="Left"/>
+        </StatusBar>
+        <Grid SnapsToDevicePixels="True">
+            <Frame x:Name="MainFrame"
+                   NavigationUIVisibility="Hidden"
+                   Background="{StaticResource ActionButtonDisabled}"
+                   SnapsToDevicePixels="True"
+                   />
+            <TextBlock x:Name="PlaceholderText"
+                       Text="{Binding PlaceholderInfo}"
+                       Foreground="Black"
+                       FontSize="24"
+                       TextWrapping="Wrap"
+                       TextAlignment="Left"
+                       HorizontalAlignment="Stretch"
+                       VerticalAlignment="Stretch"
+                       Padding="15"
+                       IsHitTestVisible="False"
+                       Visibility="Visible"
+                       SnapsToDevicePixels="True"
+                       />
+        </Grid>
+    </DockPanel>
+</Window>

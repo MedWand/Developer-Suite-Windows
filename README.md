@@ -1,2 +1,8 @@
-# Developer-Suite-Windows
-Contains the sample applications for our developer suite on windows
+# MedWand Developer Suite
+Sample windows applications for learning to use the MWSDK for Windows libraries from the MedWand Developer Suite
+
+## Documentation
+https://support.medwand.com/portal/en/kb/medwand-support/developers
+
+## GitHub
+https://github.com/MedWand/Developer-Suite-Windows

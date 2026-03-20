@@ -1,0 +1,175 @@
+﻿<Page x:Class="SampleWpfApp.Views.CameraView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      mc:Ignorable="d" 
+      d:DesignHeight="768" d:DesignWidth="1024"
+      Title="Camera">
+
+    <DockPanel>
+        <Label Style="{StaticResource LabelTitleBarStyle}" 
+               Content="Camera"
+               DockPanel.Dock="Top"
+        />
+        <Button Style="{StaticResource ActionButtonStyle}"
+                Content="{Binding ButtonActionText}"
+                Tag="{Binding ButtonActionTag}"
+                DockPanel.Dock="Bottom"
+                Click="ButtonAction_Click"
+                IsEnabled="{Binding ButtonActionEnabled}">
+        </Button>
+        <Label Style="{StaticResource LabelStatusBarStyle}"
+               Content="{Binding StatusMessage}"
+               DockPanel.Dock="Bottom"
+        />
+        <Grid Background="{StaticResource ControlDarkBrush}"
+              DockPanel.Dock="Bottom">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25*"></RowDefinition>
+                <RowDefinition Height="2*"></RowDefinition>
+                <RowDefinition Height="2*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="5*" />
+                <ColumnDefinition Width="111" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                BorderThickness="1"
+                BorderBrush="{StaticResource ControlDarkDarkBrush}"
+                Background ="Black"
+                Margin="0">
+                <Image x:Name="VideoPreview" />
+            </Border>
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                    Visibility="{Binding VideoOverlayVisible}"
+                    BorderThickness="1"
+                    BorderBrush="{StaticResource ControlDarkDarkBrush}"
+                    Background ="Black"
+                    Margin="0">
+            </Border>
+            <StackPanel x:Name="ModeButtons"
+                        Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
+                        Orientation="Vertical"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Stretch"
+                        Margin="8"
+            >
+                <Label Style="{StaticResource LabelCardStyle}" 
+                       Content="Modes"
+                       Height="Auto"
+                       Margin="0 0 0 8"
+                       Padding="0 3"
+                />
+                <Button  Tag="BtnOff"
+                         BorderBrush="Red"
+                         Background="White"
+                         Height="Auto" Width="Auto" 
+                         Margin="0 0 0 8"
+                         Padding="0 8"
+                         Click="ModeButton_Click"
+                         IsEnabled="{Binding ButtonOffEnabled}"
+                         Cursor="Hand">
+                    <StackPanel Orientation="Vertical" 
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Top"
+                                Margin="0 5">
+                        <Image Source="pack://application:,,,/Images/Buttons/Otoscope/None-hover.png"
+                               Width="64" Height="48"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Top"/>
+                        <TextBlock Text="Off"
+                                   Foreground="Black"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Margin="0"/>
+                    </StackPanel>
+                </Button>
+                <Button Tag="BtnDermatoscope"
+                        Height="Auto" Width="Auto" 
+                        Margin="0 0 0 8"
+                        Padding="0 8"
+                        Click="ModeButton_Click"
+                        IsEnabled="{Binding ButtonDermatoscopeEnabled}"
+                        Cursor="Hand">
+                    <StackPanel Orientation="Vertical" 
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Top"
+                                Margin="0 5">
+                        <Image Source="pack://application:,,,/Images/Buttons/Otoscope/Dermatoscope-hover.png"
+                               Width="64" Height="48"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Top"/>
+                        <TextBlock Text="Dermatoscope"
+                                   Foreground="Black"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Margin="0"/>
+                    </StackPanel>
+                </Button>
+                <Button Tag="BtnOtoscope"
+                        Height="Auto" Width="Auto" 
+                        Margin="0 0 0 8"
+                        Padding="0 8"
+                        Click="ModeButton_Click"
+                        IsEnabled="{Binding ButtonOtoscopeEnabled}"
+                        Cursor="Hand">
+                    <StackPanel Orientation="Vertical" 
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Top"
+                                Margin="0 5">
+                        <Image Source="pack://application:,,,/Images/Buttons/Otoscope/Otoscope-hover.png"
+                               Width="64" Height="48"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Top"/>
+                        <TextBlock Text="Otoscope"
+                                   Foreground="Black"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Margin="0"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <TextBlock Grid.Row="1" Grid.Column="0" 
+                    x:Name="TitleLedIntensity"
+                    Text="{Binding LedIntensityString, FallbackValue=LED Intensity}" 
+                    TextAlignment="Center"
+                    Foreground="White" 
+                    FontWeight="Bold" 
+                    FontSize="20"
+                    Visibility="{Binding LedIntensityStringVisible}"
+                    IsEnabled="{Binding LedIntensityStringEnabled}"
+                    />
+            <Slider Grid.Row="2" Grid.Column="0"
+                    x:Name="SliderLedIntensity"
+                    Width="Auto"
+                    Margin="20 0"
+                    Minimum="0" Maximum="{Binding LedIntensityMax}" 
+                    Value="{Binding LedIntensity}"
+                    IsTabStop="False" 
+                    Focusable="False"
+                    Visibility="{Binding LedIntensitySliderVisible}"
+                    IsEnabled="{Binding LedIntensitySliderEnabled}"
+                    />
+            <TextBlock Grid.Row="1" Grid.Column="1" 
+                       Text="{Binding TipMaskInfo, FallbackValue='0 x 0 x 0 @ 0'}" 
+                       TextAlignment="Center"
+                       Foreground="White" 
+                       FontWeight="Bold" 
+                       FontSize="20"
+                       Visibility="{Binding TipMaskInfoVisible}"
+                       IsEnabled="{Binding TipMaskInfoEnabled}"
+                       />
+            <Slider Grid.Row="2" Grid.Column="1"
+                    Width="Auto"
+                    Margin="20 0"
+                    Minimum="0" Maximum="{Binding FocusIntensityMax}" 
+                    Value="{Binding FocusIntensity}"
+                    IsTabStop="False" Focusable="False"
+                    Visibility="{Binding FocusIntensitySliderVisible}"
+                    IsEnabled="{Binding FocusIntensitySliderEnabled}"
+                    />
+        </Grid>
+    </DockPanel>
+</Page>

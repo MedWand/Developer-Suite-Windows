@@ -1,0 +1,197 @@
+﻿<Page x:Class="SampleWpfApp.Views.StethoscopeView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:SampleWpfApp.Views"
+      mc:Ignorable="d" 
+      d:DesignHeight="768" d:DesignWidth="1024"
+      Title="Stethoscope">
+    <DockPanel>
+        <Label Style="{StaticResource LabelTitleBarStyle}" 
+               Content="Stethoscope"
+               DockPanel.Dock="Top"
+        />
+        <Button Style="{StaticResource ActionButtonStyle}"
+                Content="{Binding ButtonActionText}"
+                Tag="{Binding ButtonActionTag}"
+                DockPanel.Dock="Bottom"
+                Click="ButtonAction_Click"
+                IsEnabled="{Binding ButtonActionEnabled}">
+        </Button>
+        <Label Style="{StaticResource LabelStatusBarStyle}"
+               Content="{Binding StatusMessage}"
+               DockPanel.Dock="Bottom"
+        />
+        <Grid Background="{StaticResource ControlDarkBrush}"
+              DockPanel.Dock="Bottom">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25*"></RowDefinition>
+                <RowDefinition Height="2*"></RowDefinition>
+                <RowDefinition Height="2*"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="5*" />
+                <ColumnDefinition Width="111" />
+            </Grid.ColumnDefinitions>
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                BorderThickness="1"
+                BorderBrush="{StaticResource ControlDarkDarkBrush}"
+                Background ="Black"
+                Margin="0">
+                <Image x:Name="VideoPreview" />
+            </Border>
+            <Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                    Visibility="{Binding VideoOverlayVisible}"
+                    BorderThickness="1"
+                    BorderBrush="{StaticResource ControlDarkDarkBrush}"
+                    Background ="Black"
+                    Margin="0">
+            </Border>
+            <StackPanel x:Name="ModeButtons"
+                        Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
+                        Orientation="Vertical"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Stretch"
+                        Margin="8"
+            >
+                <Label Style="{StaticResource LabelCardStyle}" 
+                       Content="Modes"
+                       Height="Auto"
+                       Margin="0 0 0 8"
+                       Padding="0 3"
+                />
+                <Button  Tag="BtnOff"
+                         BorderBrush="Red"
+                         Background="White"
+                         Height="Auto" Width="Auto" 
+                         Margin="0 0 0 8"
+                         Padding="0 8"
+                         Click="ModeButton_Click"
+                         IsEnabled="{Binding ButtonOffEnabled}"
+                         Cursor="Hand">
+                    <StackPanel Orientation="Vertical" 
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Top"
+                                Margin="0 5">
+                        <Image Source="pack://application:,,,/Images/Buttons/Stethoscope/None-hover.png"
+                               Width="64" Height="48"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Top"/>
+                        <TextBlock Text="Off"
+                                   Foreground="Black"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Margin="0"/>
+                    </StackPanel>
+                </Button>
+                <Button Tag="BtnHeart"
+                        Height="Auto" Width="Auto" 
+                        Margin="0 0 0 8"
+                        Padding="0 8"
+                        Click="ModeButton_Click"
+                        IsEnabled="{Binding ButtonHeartEnabled}"
+                        Cursor="Hand">
+                    <StackPanel Orientation="Vertical" 
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Top"
+                                Margin="0 5">
+                        <Image Source="pack://application:,,,/Images/Buttons/Stethoscope/Heart-hover.png"
+                               Width="64" Height="48"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Top"/>
+                        <TextBlock Text="Heart"
+                                   Foreground="Black"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Margin="0"/>
+                    </StackPanel>
+                </Button>
+                <Button Tag="BtnLungs"
+                        Height="Auto" Width="Auto" 
+                        Margin="0 0 0 8"
+                        Padding="0 8"
+                        Click="ModeButton_Click"
+                        IsEnabled="{Binding ButtonLungsEnabled}"
+                        Cursor="Hand">
+                    <StackPanel Orientation="Vertical" 
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Top"
+                                Margin="0 5">
+                        <Image Source="pack://application:,,,/Images/Buttons/Stethoscope/Lung-hover.png"
+                               Width="64" Height="48"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Top"/>
+                        <TextBlock Text="Lungs"
+                                   Foreground="Black"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Margin="0"/>
+                    </StackPanel>
+                </Button>
+                <Button Tag="BtnBowel"
+                        Height="Auto" Width="Auto" 
+                        Margin="0 0 0 8"
+                        Padding="0 8"
+                        Click="ModeButton_Click"
+                        IsEnabled="{Binding ButtonBowelEnabled}"
+                        Cursor="Hand">
+                    <StackPanel Orientation="Vertical" 
+                                HorizontalAlignment="Center" 
+                                VerticalAlignment="Top"
+                                Margin="0 5">
+                        <Image Source="pack://application:,,,/Images/Buttons/Stethoscope/Bowel-hover.png"
+                               Width="64" Height="48"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Top"/>
+                        <TextBlock Text="Bowel"
+                                   Foreground="Black"
+                                   FontSize="12"
+                                   HorizontalAlignment="Center"
+                                   Margin="0"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <TextBlock Grid.Row="1" Grid.Column="0" 
+                    x:Name="TitleVolume"
+                    Text="{Binding VolumeString, FallbackValue=Volume}" 
+                    TextAlignment="Center"
+                    Foreground="White" 
+                    FontWeight="Bold" 
+                    FontSize="20"
+                    Visibility="{Binding VolumeStringVisible}"
+                    IsEnabled="{Binding VolumeStringEnabled}"
+                    />
+            <Slider Grid.Row="2" Grid.Column="0"
+                    x:Name="SliderVolume"
+                    Width="Auto"
+                    Margin="20 0"
+                    Minimum="0" Maximum="{Binding VolumeMax}" 
+                    Value="{Binding Volume}"
+                    IsTabStop="False" 
+                    Focusable="False"
+                    Visibility="{Binding VolumeSliderVisible}"
+                    IsEnabled="{Binding VolumeSliderEnabled}"
+                    />
+            <TextBlock Grid.Row="1" Grid.Column="1" 
+                       Text="{Binding GainString, FallbackValue='Gain'}" 
+                       TextAlignment="Center"
+                       Foreground="White" 
+                       FontWeight="Bold" 
+                       FontSize="20"
+                       Visibility="{Binding GainStringVisible}"
+                       IsEnabled="{Binding GainStringEnabled}"
+                       />
+            <Slider Grid.Row="2" Grid.Column="1"
+                    Width="Auto"
+                    Margin="20 0"
+                    Minimum="0" Maximum="{Binding GainMax}" 
+                    Value="{Binding Gain}"
+                    IsTabStop="False" Focusable="False"
+                    Visibility="{Binding GainSliderVisible}"
+                    IsEnabled="{Binding GainSliderEnabled}"
+                    />
+        </Grid>
+    </DockPanel>
+</Page>
