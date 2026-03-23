@@ -1,4 +1,4 @@
-# MedWand Developer Suite
+# MedWand Developer Suite - DECL
 Sample windows applications for learning to use the MWSDK for Windows libraries from the MedWand Developer Suite
 
 ## Documentation
