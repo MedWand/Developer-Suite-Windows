@@ -22,7 +22,7 @@ public partial class StethoscopeView : ISensorView
     public StethoscopeView(MedWandController medWandController)
     {
         InitializeComponent();
-        _viewModel = new StethoscopeViewModel(medWandController);
+        _viewModel = new StethoscopeViewModel(medWandController, locked => ViewLockStateChanged?.Invoke(locked));
         _viewModel.StethoscopeModeChanged += OnStethoscopeModeChanged;
 
         DataContext = _viewModel;
