@@ -10,23 +10,56 @@ using static MWSDK.NetCore.Internal.StethoscopeHelpers;
 
 namespace SampleWpfApp.Views;
 
+/// <summary>
+/// Represents the ViewModel for the Stethoscope functionality in the application.
+/// </summary>
+/// <remarks>
+/// This class provides properties, commands, and event handlers to manage the state and behavior
+/// of the stethoscope sensor, including mode selection, recording control, and UI updates.
+/// It implements <see cref="System.ComponentModel.INotifyPropertyChanged"/> to notify the UI of property changes
+/// and <see cref="System.IDisposable"/> to release resources when no longer needed.
+/// </remarks>
 public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
 {
     public MedWandSensor MedWandSensor => MedWandSensor.Stethoscope;
-    public StethoscopeHelpers.MicrophoneModes StethoscopeMode => _medWandController.StethoscopeMode;
+    public MicrophoneModes StethoscopeMode => _medWandController.StethoscopeMode;
     public event Action<bool>? ViewLockStateChanged;
-    public event Action<StethoscopeHelpers.MicrophoneModes>? StethoscopeModeChanged;
+    public event Action<MicrophoneModes>? StethoscopeModeChanged;
 
     private readonly MedWandController _medWandController;
+    private readonly Action<bool> _setLocked;
     private bool _isActivated;
     private int _framesCaptured;
     private string _readingState = string.Empty;
 
-    public StethoscopeViewModel(MedWandController medWandController)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StethoscopeViewModel"/> class.
+    /// </summary>
+    /// <param name="medWandController">
+    /// The <see cref="MedWandController"/> instance used to manage the stethoscope sensor and its operations.
+    /// </param>
+    /// <param name="setLocked">
+    /// An <see cref="Action{T}"/> delegate to handle the locked state of the view.
+    /// </param>
+    /// <remarks>
+    /// This constructor sets up the necessary dependencies for the stethoscope functionality,
+    /// including the controller that handles sensor interactions.
+    /// </remarks>
+    public StethoscopeViewModel(MedWandController medWandController, Action<bool> setLocked)
     {
         _medWandController = medWandController;
+        _setLocked = setLocked;
     }
 
+    /// <summary>
+    /// Activates the stethoscope functionality by initializing necessary event handlers 
+    /// and updating the initial state of the ViewModel.
+    /// </summary>
+    /// <remarks>
+    /// This method ensures that the stethoscope is properly set up for use by attaching 
+    /// event handlers and setting the initial action state and status. It prevents 
+    /// multiple activations by checking the activation state.
+    /// </remarks>
     internal void Activate()
     {
         if (!_isActivated)
@@ -42,6 +75,13 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         UpdateStatus();
     }
 
+    /// <summary>
+    /// Deactivates the stethoscope functionality by resetting its mode and detaching event handlers.
+    /// </summary>
+    /// <remarks>
+    /// This method sets the stethoscope mode to <see cref="StethoscopeHelpers.MicrophoneModes.Off"/> 
+    /// and removes the event handler for recorded frames to release resources and stop ongoing operations.
+    /// </remarks>
     internal void Deactivate()
     {
         SetStethoscopeMode(MicrophoneModes.Off);
@@ -49,6 +89,16 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         _medWandController.Stethoscope.RecordedFramesReady -= OnRecordedFramesReady;
     }
 
+    /// <summary>
+    /// Sets the mode of the stethoscope to the specified value.
+    /// </summary>
+    /// <param name="stethoscopeMode">The desired mode for the stethoscope, represented by <see cref="StethoscopeHelpers.MicrophoneModes"/>.</param>
+    /// <remarks>
+    /// This method updates the stethoscope mode if it differs from the current mode. It temporarily sets the mouse cursor 
+    /// to a wait cursor during the operation, invokes the mode change on the underlying controller, and triggers the 
+    /// <see cref="StethoscopeModeChanged"/> event to notify subscribers of the mode change. Additionally, it updates the 
+    /// status of the ViewModel to reflect the new mode.
+    /// </remarks>
     internal void SetStethoscopeMode(MicrophoneModes stethoscopeMode)
     {
         if (stethoscopeMode == _medWandController.StethoscopeMode)
@@ -57,6 +107,7 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         }
 
         Mouse.OverrideCursor = Cursors.Wait;
+        _setLocked(true);
 
         _medWandController.SetStethoscopeMode(stethoscopeMode, null);
 
@@ -64,9 +115,17 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
 
         UpdateStatus();
 
+        _setLocked(true);
         Mouse.OverrideCursor = null;
     }
 
+    /// <summary>
+    /// Initiates the process of capturing audio data using the stethoscope sensor.
+    /// </summary>
+    /// <remarks>
+    /// This method sets the action state to <see cref="ActionState.Disabled"/>, starts the recording process
+    /// via the associated <see cref="MedWandController"/>, and then updates the action state to <see cref="ActionState.Busy"/>.
+    /// </remarks>
     internal void StartCapture()
     {
         SetAction(ActionState.Disabled);
@@ -74,6 +133,14 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         SetAction(ActionState.Busy);
     }
 
+    /// <summary>
+    /// Stops the ongoing audio capture process for the stethoscope.
+    /// </summary>
+    /// <remarks>
+    /// This method transitions the stethoscope's action state to <see cref="ActionState.Disabled"/>,
+    /// stops the recording process through the associated <see cref="MedWandController"/>,
+    /// and then sets the action state to <see cref="ActionState.Idle"/>.
+    /// </remarks>
     internal void StopCapture()
     {
         SetAction(ActionState.Disabled);
@@ -81,6 +148,14 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         SetAction(ActionState.Idle);
     }
 
+    /// <summary>
+    /// Releases all resources used by the <see cref="StethoscopeViewModel"/> instance.
+    /// </summary>
+    /// <remarks>
+    /// This method unsubscribes from events and performs cleanup to ensure that resources
+    /// are properly released. It should be called when the ViewModel is no longer needed
+    /// to avoid memory leaks.
+    /// </remarks>
     public void Dispose()
     {
         if (_medWandController.Stethoscope == null) return;
@@ -98,6 +173,11 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         ButtonActionEnabled = enabled;
     }
 
+    /// <summary>
+    /// Updates the current status of the stethoscope, including its mode, reading state, 
+    /// and the number of frames captured. This method constructs a status message 
+    /// reflecting the stethoscope's operational state.
+    /// </summary>
     private void UpdateStatus()
     {
         _readingState = _medWandController.ReadingState switch
@@ -111,6 +191,11 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         StatusMessage = $"{_medWandController.StethoscopeMode} : {_readingState} [{_framesCaptured} Captured]";
     }
 
+    /// <summary>
+    /// Updates the current action state and adjusts the UI and view lock state accordingly.
+    /// </summary>
+    /// <param name="actionState">The new action state to set. Possible values are <see cref="ActionState.Idle"/>, <see cref="ActionState.Busy"/>, or <see cref="ActionState.Disabled"/>.</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when an invalid <paramref name="actionState"/> is provided.</exception>
     private void SetAction(ActionState actionState)
     {
         switch (actionState)
@@ -133,6 +218,14 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>
+    /// Updates the state of the action button to indicate that it is busy.
+    /// </summary>
+    /// <remarks>
+    /// This method sets the action button's state to <see cref="ActionState.Busy"/>, updates its text to "Stop Recording",
+    /// and assigns the corresponding tag to reflect the busy state.
+    /// It is typically invoked when the application is performing an ongoing operation that requires user attention.
+    /// </remarks>
     private void SetActionButtonBusy()
     {
         ButtonActionState = ActionState.Busy;
@@ -140,6 +233,13 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         ButtonActionTag = nameof(ActionState.Busy);
     }
 
+    /// <summary>
+    /// Configures the action button to represent the idle state.
+    /// </summary>
+    /// <remarks>
+    /// This method updates the action button's state, text, and tag to reflect that
+    /// the stethoscope is ready for a new action, such as starting a recording.
+    /// </remarks>
     private void SetActionButtonIdle()
     {
         ButtonActionState = ActionState.Idle;
@@ -147,6 +247,14 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         ButtonActionTag = nameof(ActionState.Idle);
     }
 
+    /// <summary>
+    /// Updates the state of the action button to indicate it is disabled.
+    /// </summary>
+    /// <remarks>
+    /// This method sets the <see cref="ButtonActionState"/> to <see cref="ActionState.Disabled"/>, 
+    /// clears the <see cref="ButtonActionText"/>, and assigns the <see cref="ButtonActionTag"/> 
+    /// to the name of the <see cref="ActionState.Disabled"/> state.
+    /// </remarks>
     private void SetActionButtonDisabled()
     {
         ButtonActionState = ActionState.Disabled;
@@ -157,6 +265,15 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
 
     #region Events
 
+    /// <summary>
+    /// Handles the event triggered when recorded frames are ready from the stethoscope.
+    /// </summary>
+    /// <param name="sender">The source of the event, typically the stethoscope device.</param>
+    /// <param name="bytes">The byte array containing the recorded audio frames.</param>
+    /// <remarks>
+    /// This method processes the recorded frames by appending relevant information to a log file,
+    /// updating the frame capture count, and refreshing the UI status.
+    /// </remarks>
     private void OnRecordedFramesReady(object? sender, byte[] bytes)
     {
         Mouse.OverrideCursor = Cursors.Wait;
@@ -416,7 +533,7 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
-    private int _gain = 0;
+    private int _gain;
     public int Gain
     {
         get => _gain;

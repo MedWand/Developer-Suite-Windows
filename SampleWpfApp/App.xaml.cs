@@ -26,8 +26,8 @@ internal static class Settings
     public static readonly string AppCopyright = DateTime.UtcNow.Year.ToString();
     public static readonly Version AppVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version();
     public static readonly string AppBuild = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "Unknown Build";
-    public static readonly string MwSdkLicense = @"";
-    public static readonly string MwSdkPublicKey = @"";
+
+    // TODO: Set MedWand License Information
+    public static string MwSdkLicense = @"";
+    public static string MwSdkPublicKey = @"";
 }
-
-

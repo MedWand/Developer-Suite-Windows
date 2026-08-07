@@ -19,7 +19,7 @@ public partial class CameraView : ISensorView
     public CameraView(MedWandController medWandController)
     {
         InitializeComponent();
-        _viewModel = new CameraViewModel(medWandController, VideoPreview);
+        _viewModel = new CameraViewModel(medWandController, locked => ViewLockStateChanged?.Invoke(locked), VideoPreview);
         _viewModel.CameraModeChanged += OnCameraModeChanged;
 
         DataContext = _viewModel;

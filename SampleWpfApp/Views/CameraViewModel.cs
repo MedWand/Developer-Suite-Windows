@@ -12,6 +12,15 @@ using static MWSDK.NetCore.Internal.CameraHelper;
 
 namespace SampleWpfApp.Views;
 
+/// <summary>
+/// Represents the view model for managing camera-related functionalities in the WPF application.
+/// </summary>
+/// <remarks>
+/// This class provides properties, commands, and events to control and interact with the camera,
+/// including camera modes, LED intensity, focus settings, and user interactions such as key presses.
+/// It implements <see cref="System.ComponentModel.INotifyPropertyChanged"/> to notify changes in property values
+/// and <see cref="System.IDisposable"/> to release resources when no longer needed.
+/// </remarks>
 public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
 {
     public MedWandSensor MedWandSensor => MedWandSensor.Otoscope;
@@ -20,6 +29,7 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
     public event Action<CameraModes>? CameraModeChanged;
 
     private readonly MedWandController _medWandController;
+    private readonly Action<bool> _setLocked;
     private DispatcherTimer? _controlTimer;
     private readonly Image _videoPreview;
     private bool _isActivated;
@@ -30,13 +40,38 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
     private int _controlTimerTickSeconds;
     private string _readingState = string.Empty;
 
-    public CameraViewModel(MedWandController medWandController, Image videoPreview)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CameraViewModel"/> class.
+    /// </summary>
+    /// <param name="medWandController">
+    /// The <see cref="MedWandController"/> instance used to manage camera operations and settings.
+    /// </param>
+    /// <param name="setLocked">
+    /// An <see cref="Action{T}"/> delegate to handle the locked state of the view.
+    /// </param>
+    /// <param name="videoPreview">
+    /// The <see cref="Image"/> control used to display the video preview from the camera.
+    /// </param>
+    /// <remarks>
+    /// This constructor sets up the camera view model by associating it with the specified
+    /// <paramref name="medWandController"/> and <paramref name="videoPreview"/>.
+    /// It also initializes the LED intensity to the maximum value supported by the controller.
+    /// </remarks>
+    public CameraViewModel(MedWandController medWandController, Action<bool> setLocked, Image videoPreview)
     {
         _medWandController = medWandController;
+        _setLocked = setLocked;
         _videoPreview = videoPreview;
         LedIntensityMax = _medWandController.CameraLedIntensityMax;
     }
 
+    /// <summary>
+    /// Activates the camera functionality by initializing necessary components and settings.
+    /// </summary>
+    /// <remarks>
+    /// This method ensures that the camera is properly initialized and ready for operation. 
+    /// It sets up event handlers, initializes timers if required, and updates the internal state.
+    /// </remarks>
     internal void Activate()
     {
         if (!_isActivated)
@@ -47,7 +82,7 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
             LedIntensityMax = _medWandController.CameraLedIntensityMax;
             if (_medWandController.Camera != null)
             {
-                _medWandController.LedIntensityChanged += MedWandController_LedIntensityChanged;
+                _medWandController.OnLedIntensityChanged += MedWandController_LedIntensityChanged;
                 _medWandController.Camera.RecordedFrameReady += Camera_RecordedFrameReady;
                 if (_medWandController.CameraHasOnTimer)
                 {
@@ -65,11 +100,35 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         UpdateStatus();
     }
 
+    /// <summary>
+    /// Deactivates the camera by setting its mode to <see cref="CameraModes.Off"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is intended to stop the camera's operation and release any associated resources.
+    /// It is typically called when the camera is no longer needed or the view is being disposed.
+    /// </remarks>
     internal void Deactivate()
     {
         SetCameraMode(CameraModes.Off);
     }
 
+    /// <summary>
+    /// Handles key press events to control camera movement, zoom, and reset actions.
+    /// </summary>
+    /// <param name="key">The key that was pressed.</param>
+    /// <returns>
+    /// <see langword="true"/> if the key press was handled and resulted in a camera action; 
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Supported keys include:
+    /// <list type="bullet">
+    /// <item><description><see cref="Key.Left"/> and <see cref="Key.Right"/> for horizontal movement.</description></item>
+    /// <item><description><see cref="Key.Up"/> and <see cref="Key.Down"/> for vertical movement.</description></item>
+    /// <item><description><see cref="Key.PageUp"/> and <see cref="Key.PageDown"/> for zooming in and out.</description></item>
+    /// <item><description><see cref="Key.Enter"/> to reset the camera to its default state.</description></item>
+    /// </list>
+    /// </remarks>
     internal bool KeyDown(Key key)
     {
         switch (key)
@@ -100,6 +159,15 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         return false;
     }
 
+    /// <summary>
+    /// Sets the camera mode to the specified value and updates the associated state and UI elements.
+    /// </summary>
+    /// <param name="cameraMode">The <see cref="CameraModes"/> value to set the camera to.</param>
+    /// <remarks>
+    /// This method adjusts the camera mode, updates the visibility of video overlays, and triggers the 
+    /// <see cref="CameraModeChanged"/> event if the mode changes. It also manages the control timer 
+    /// and updates the application status.
+    /// </remarks>
     internal void SetCameraMode(CameraModes cameraMode)
     {
         if (cameraMode == _medWandController.CameraMode)
@@ -108,6 +176,7 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         }
 
         Mouse.OverrideCursor = Cursors.Wait;
+        _setLocked(true);
 
         _medWandController.SetCameraMode(_videoPreview, cameraMode);
 
@@ -138,14 +207,30 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
 
         UpdateStatus();
 
+        _setLocked(false);
         Mouse.OverrideCursor = null;
     }
 
+    /// <summary>
+    /// Captures a single frame from the camera and initiates the recording process.
+    /// </summary>
+    /// <remarks>
+    /// This method interacts with the underlying <see cref="MedWandController"/> to start recording
+    /// a frame from the camera. It is typically invoked as part of user actions or automated workflows
+    /// requiring a snapshot or frame capture.
+    /// </remarks>
     internal void CaptureFrame()
     {
         _medWandController.StartRecording();
     }
 
+    /// <summary>
+    /// Releases all resources used by the <see cref="CameraViewModel"/> instance.
+    /// </summary>
+    /// <remarks>
+    /// This method unsubscribes from events and stops any active timers associated with the camera.
+    /// It ensures proper cleanup of resources to prevent memory leaks or unexpected behavior.
+    /// </remarks>
     public void Dispose()
     {
         if (_medWandController.CameraHasOnTimer)
@@ -157,11 +242,21 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
             }
         }
         if (_medWandController.Camera == null) return;
-        _medWandController.LedIntensityChanged -= MedWandController_LedIntensityChanged;
+        _medWandController.OnLedIntensityChanged -= MedWandController_LedIntensityChanged;
         _medWandController.Camera.RecordedFrameReady -= Camera_RecordedFrameReady;
 
     }
 
+    /// <summary>
+    /// Sets the interactive state of various camera control elements.
+    /// </summary>
+    /// <param name="enabled">
+    /// A boolean value indicating whether the controls should be enabled (<c>true</c>) or disabled (<c>false</c>).
+    /// </param>
+    /// <remarks>
+    /// This method updates the enabled state of buttons and sliders related to camera functionalities,
+    /// such as LED intensity, focus adjustment, and specific camera mode buttons.
+    /// </remarks>
     private void SetControlsInteractive(bool enabled)
     {
         ButtonOffEnabled = enabled;
@@ -172,6 +267,16 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         ButtonActionEnabled = enabled;
     }
 
+    /// <summary>
+    /// Updates the current status of the camera, including the reading state, 
+    /// status message, and other related properties based on the camera's mode 
+    /// and operational state.
+    /// </summary>
+    /// <remarks>
+    /// This method determines the reading state of the camera and constructs 
+    /// a status message that reflects the current camera mode, reading state, 
+    /// and additional details such as captured frames or timer availability.
+    /// </remarks>
     private void UpdateStatus()
     {
         _readingState = _medWandController.ReadingState switch
@@ -193,6 +298,17 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>
+    /// Updates the current action state of the camera view and adjusts the UI and behavior accordingly.
+    /// </summary>
+    /// <param name="actionState">The new action state to set. Possible values are <see cref="ActionState.Idle"/>, <see cref="ActionState.Busy"/>, and <see cref="ActionState.Disabled"/>.</param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when the provided <paramref name="actionState"/> is not a valid <see cref="ActionState"/> value.
+    /// </exception>
+    /// <remarks>
+    /// This method modifies the state of the action button and triggers the <see cref="ViewLockStateChanged"/> event
+    /// to notify subscribers about changes in the view's lock state.
+    /// </remarks>
     private void SetAction(ActionState actionState)
     {
         switch (actionState)
@@ -215,6 +331,13 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>
+    /// Updates the state of the action button to indicate that an action is in progress.
+    /// </summary>
+    /// <remarks>
+    /// This method sets the action button's state to <see cref="ActionState.Busy"/>, updates its text to
+    /// display a "Capturing..." message, and assigns a tag representing the busy state.
+    /// </remarks>
     private void SetActionButtonBusy()
     {
         ButtonActionState = ActionState.Busy;
@@ -222,6 +345,13 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         ButtonActionTag = nameof(ActionState.Busy);
     }
 
+    /// <summary>
+    /// Configures the action button to represent the "Idle" state.
+    /// </summary>
+    /// <remarks>
+    /// This method updates the action button's state, text, and tag to indicate that it is in the "Idle" state.
+    /// It is typically used when the application is ready for user interaction, such as capturing a frame.
+    /// </remarks>
     private void SetActionButtonIdle()
     {
         ButtonActionState = ActionState.Idle;
@@ -229,6 +359,14 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         ButtonActionTag = nameof(ActionState.Idle);
     }
 
+    /// <summary>
+    /// Updates the state of the action button to indicate it is disabled.
+    /// </summary>
+    /// <remarks>
+    /// This method sets the <see cref="ButtonActionState"/> to <see cref="ActionState.Disabled"/>, 
+    /// clears the <see cref="ButtonActionText"/>, and assigns the <see cref="ButtonActionTag"/> 
+    /// to represent the disabled state.
+    /// </remarks>
     private void SetActionButtonDisabled()
     {
         ButtonActionState = ActionState.Disabled;
@@ -239,6 +377,16 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
 
     #region Events
 
+    /// <summary>
+    /// Handles the tick event of the control timer.
+    /// </summary>
+    /// <param name="sender">The source of the event, typically the timer instance.</param>
+    /// <param name="e">The event data associated with the timer tick.</param>
+    /// <remarks>
+    /// This method updates the timer counters and manages the camera's operational state,
+    /// including transitioning between active and cooldown states. It also updates the UI
+    /// and control interactivity based on the timer's progress.
+    /// </remarks>
     private void OnControlTimerTick(object? sender, EventArgs e)
     {
         if (_controlTimerTickDown)
@@ -274,11 +422,28 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         UpdateStatus();
     }
 
+    /// <summary>
+    /// Handles the LED intensity change event from the MedWand controller.
+    /// </summary>
+    /// <param name="value">The new LED intensity value provided by the MedWand controller.</param>
+    /// <remarks>
+    /// This method updates the <see cref="LedIntensity"/> property to reflect the new LED intensity value.
+    /// It is triggered when the MedWand controller raises the <c>OnLedIntensityChanged</c> event.
+    /// </remarks>
     private void MedWandController_LedIntensityChanged(int value)
     {
         LedIntensity = value;
     }
 
+    /// <summary>
+    /// Handles the event triggered when a recorded frame is ready from the camera.
+    /// </summary>
+    /// <param name="sender">The source of the event, typically the camera object.</param>
+    /// <param name="bytes">The byte array containing the recorded frame data.</param>
+    /// <remarks>
+    /// This method appends information about the captured frame to a log file, updates the frame count,
+    /// refreshes the status, and resets the mouse cursor.
+    /// </remarks>
     private void Camera_RecordedFrameReady(object? sender, byte[] bytes)
     {
         File.AppendAllText("captures.txt", $"[{DateTime.UtcNow:O}] {_medWandController.CameraModel} {CameraMode} -> {_medWandController.CameraBmpFromCapture(bytes)}\n");
