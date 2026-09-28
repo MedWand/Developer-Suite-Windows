@@ -146,13 +146,13 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
                 _medWandController.CameraSetFocusValue(_focusValue);
                 break;
             case Key.NumPad0:
-                if (_medWandController.CameraFocusModes != FocusModes.Manual) return false;
+                if (_medWandController.CameraFocusMode != FocusModes.Manual) return false;
                 _focusValue--;
                 if (_focusValue < 1) _focusValue = 1;
                 _medWandController.CameraSetFocusValue(_focusValue);
                 break;
             case Key.NumPad1:
-                if (_medWandController.CameraFocusModes != FocusModes.Manual) return false;
+                if (_medWandController.CameraFocusMode != FocusModes.Manual) return false;
                 _focusValue++;
                 _medWandController.CameraSetFocusValue(_focusValue);
                 break;
@@ -311,7 +311,7 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
     private void UpdateStatus()
     {
         var focusState = "";
-        if (_medWandController.CameraFocusModes == FocusModes.Manual)
+        if (_medWandController.CameraFocusMode == FocusModes.Manual)
         {
             focusState = $"({_focusValue})";
         }
@@ -325,7 +325,7 @@ public sealed class CameraViewModel : INotifyPropertyChanged, IDisposable
         };
         if (!_medWandController.CameraHasOnTimer)
         {
-            StatusMessage = $"{_medWandController.CameraMode} : {_readingState} Focus: {_medWandController.CameraFocusModes}{focusState} [{_framesCaptured} Captured]";
+            StatusMessage = $"{_medWandController.CameraMode} : {_readingState} Focus: {_medWandController.CameraFocusMode}{focusState} [{_framesCaptured} Captured]";
         }
         else
         {
