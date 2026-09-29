@@ -13,7 +13,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<AssemblyVersion>3.0.2.1</AssemblyVersion>
+		<AssemblyVersion>3.0.2.5</AssemblyVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -35,7 +35,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="MWSDK.Wpf" Version="3.0.2.1" />
+	  <PackageReference Include="MWSDK.Wpf" Version="3.0.2.5" />
 	</ItemGroup>
 
 	<ItemGroup>

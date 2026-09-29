@@ -200,8 +200,6 @@ public partial class MainWindow : INotifyPropertyChanged
         _medWandController.OnLicenseError += MedWandController_LicenseError;
         _medWandController.Construct(Settings.MwSdkLicense, Settings.MwSdkPublicKey);
 
-        if (!_medWandController.IsLicenseValid)
-            throw new Exception("No valid license");
     }
 
     /// <summary>
@@ -222,9 +220,8 @@ public partial class MainWindow : INotifyPropertyChanged
         UpdateStatus("Connecting to MedWand.");
 
         // Check for firmware update every [n] days (see you MedWand contract for details)
-        // const int n = 15;
-        const int n = -1; // Set to -1 to force an update check for testing
-        _checkFirmwareVersion = (DateTime.UtcNow - _lastFirmwareCheckDate).TotalDays > n;
+        const int n = 0; // -1 means always check, 0 means never check, 1 means check every day, 2 means check every 2 days, etc.
+        _checkFirmwareVersion = n != 0 && (DateTime.UtcNow - _lastFirmwareCheckDate).TotalDays > n;
 
         var done = false;
         do
@@ -233,16 +230,10 @@ public partial class MainWindow : INotifyPropertyChanged
             {
                 CreateNewMedWandController();
                 _medWandController?.Connect();
-                if (_checkFirmwareVersion)
-                {
-                    _medWandController?.CheckFirmwareVersion();
-                    // Force an update regardless of _checkFirmwareVersion value. Can be used as an override.
-                    // throw new MedWandFirmwareUpdateRequiredException(new Version(0, 0, 0, 0), new Version(1, 0, 0, 0), "Force firmware update");
-                }
                 if (_medWandController is not { IsConnected: true })
                 {
                     var resultDialog = MessageBox.Show(
-                        "MedWand not found. PLease connect your MedWand and try again.",
+                        "MedWand not found. Please connect your MedWand and try again.",
                         "MedWand Not Found",
                         MessageBoxButton.OKCancel,
                         MessageBoxImage.Warning
@@ -251,6 +242,10 @@ public partial class MainWindow : INotifyPropertyChanged
                 }
                 else
                 {
+                    if (_checkFirmwareVersion)
+                    {
+                        _medWandController?.CheckFirmwareVersion();
+                    }
                     done = true;
                 }
             }
@@ -262,24 +257,30 @@ public partial class MainWindow : INotifyPropertyChanged
             catch (Exception outerEx)
             {
                 Debug.WriteLine(outerEx);
-
+                done = true;
             }
         } while (!done);
-
-        switch (_medWandController?.DeviceState)
+        if (_medWandController is not { IsLicenseValid: true })
         {
-            case DeviceState.Connected:
-                _medWandController.OnDeviceError += MedWandController_MedWandDeviceError;
-                _medWandController.OnDeviceStateChanged += MedWandController_DeviceStateChanged;
-                break;
-            case DeviceState.FirmwareUpdateRequired:
-                Cleanup();
-                UpdateStatus("Shutting down...");
-                Application.Current.Shutdown();
-                break;
-            default:
-                DisposeCurrentMedWandController();
-                throw new Exception("No MedWand Connected!");
+            MessageBox.Show(this, "MedWand license is not valid.", "Construct Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        else
+        {
+            switch (_medWandController?.DeviceState)
+            {
+                case DeviceState.Connected:
+                    _medWandController.OnDeviceError += MedWandController_MedWandDeviceError;
+                    _medWandController.OnDeviceStateChanged += MedWandController_DeviceStateChanged;
+                    break;
+                case DeviceState.FirmwareUpdateRequired:
+                    Cleanup();
+                    UpdateStatus("Shutting down...");
+                    Application.Current.Shutdown();
+                    break;
+                default:
+                    DisposeCurrentMedWandController();
+                    throw new Exception("No MedWand Connected!");
+            }
         }
     }
 
@@ -728,8 +729,10 @@ public partial class MainWindow : INotifyPropertyChanged
     /// This method is invoked when the <see cref="MedWandController"/> detects an issue with the license.
     /// It logs the license error details for debugging purposes.
     /// </remarks>
-    private void MedWandController_LicenseError(LicenseState state) =>
+    private void MedWandController_LicenseError(LicenseState state)
+    {
         Debug.WriteLine($"LicenseError: {state}");
+    }
 
     /// <summary>
     /// Handles the MedWand device error event.
