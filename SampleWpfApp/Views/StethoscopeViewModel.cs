@@ -1,12 +1,15 @@
 ﻿using MWSDK.NetCore;
 using MWSDK.NetCore.Internal;
 using MWSDK.Wpf;
+using NAudio.CoreAudioApi;
+using SampleWpfApp.Core;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
-using SampleWpfApp.Core;
 using static MWSDK.NetCore.Internal.StethoscopeHelpers;
+using DeviceState = NAudio.CoreAudioApi.DeviceState;
 
 namespace SampleWpfApp.Views;
 
@@ -31,6 +34,9 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
     private bool _isActivated;
     private int _framesCaptured;
     private string _readingState = string.Empty;
+    private readonly MMDeviceEnumerator _speakerEnumerator = new();
+    private readonly MMDevice? _speaker;
+    private MMDevice? _microphone;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StethoscopeViewModel"/> class.
@@ -49,6 +55,10 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
     {
         _medWandController = medWandController;
         _setLocked = setLocked;
+
+        _speaker = _speakerEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+        Volume = (int)Math.Round(_speaker.AudioEndpointVolume.MasterVolumeLevelScalar * 100);
+        _speaker.AudioEndpointVolume.OnVolumeNotification += OnVolumeNotification;
     }
 
     /// <summary>
@@ -111,6 +121,23 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
 
         _medWandController.SetStethoscopeMode(stethoscopeMode, null);
 
+        // Use this call to set the stethoscope mode without using the MedWand SDK audio stack.
+        // You will be responsible for using your own audio stack to hear and capture the audio.
+        //_medWandController.SetStethoscopeMode(stethoscopeMode);
+
+        // Use this call to set the stethoscope mode which uses the MedWand SDK audio stack.
+        // The MedWand SDK audio stack handles preview and capturing the audio.
+        _medWandController.SetStethoscopeMode(stethoscopeMode, null);
+
+        if (_microphone == null)
+        {
+            var devices = _speakerEnumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+            _microphone = devices.FirstOrDefault(d => d.FriendlyName.StartsWith(_medWandController.StethoscopeModel, StringComparison.OrdinalIgnoreCase))
+                          ?? throw new InvalidOperationException($"Microphone starting with '{_medWandController.StethoscopeModel}' was not found.");
+            Gain = (int)Math.Round(_microphone.AudioEndpointVolume.MasterVolumeLevelScalar * 100);
+            _microphone.AudioEndpointVolume.OnVolumeNotification += OnGainNotification;
+        }
+
         StethoscopeModeChanged?.Invoke(_medWandController.StethoscopeMode);
 
         UpdateStatus();
@@ -158,6 +185,12 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
     /// </remarks>
     public void Dispose()
     {
+        if (_speaker != null)
+        {
+            _speaker.AudioEndpointVolume.OnVolumeNotification -= OnVolumeNotification;
+            _speaker.Dispose();
+        }
+        _speakerEnumerator.Dispose();
         if (_medWandController.Stethoscope == null) return;
         _medWandController.Stethoscope.RecordedFramesReady -= OnRecordedFramesReady;
     }
@@ -264,6 +297,32 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
 
 
     #region Events
+
+    private void OnVolumeNotification(AudioVolumeNotificationData data)
+    {
+        Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+        {
+            int volume = (int)Math.Round(data.MasterVolume * 100);
+
+            if (_volume == volume) return;
+
+            _volume = volume;
+            OnPropertyChanged(nameof(Volume));
+        }));
+    }
+
+    private void OnGainNotification(AudioVolumeNotificationData data)
+    {
+        Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+        {
+            int gain = (int)Math.Round(data.MasterVolume * 100);
+
+            if (_gain == gain) return;
+
+            _gain = gain;
+            OnPropertyChanged(nameof(Gain));
+        }));
+    }
 
     /// <summary>
     /// Handles the event triggered when recorded frames are ready from the stethoscope.
@@ -448,13 +507,15 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
-    private int _volume = 15;
+    private int _volume = 0;
     public int Volume
     {
         get => _volume;
         set
         {
-            if (_volume == value) return;
+            value = Math.Clamp(value, 0, 100);
+            if (_volume == value || _speaker == null) return;
+            _speaker.AudioEndpointVolume.MasterVolumeLevelScalar = value / 100f;
             _volume = value;
             OnPropertyChanged();
         }
@@ -521,7 +582,7 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
-    private int _gainMax = 10;
+    private int _gainMax = 100;
     public int GainMax
     {
         get => _gainMax;
@@ -533,13 +594,15 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
-    private int _gain;
+    private int _gain = 0;
     public int Gain
     {
         get => _gain;
         set
         {
-            if (_gain == value) return;
+            value = Math.Clamp(value, 0, 100);
+            if (_gain == value || _microphone == null) return;
+            _microphone.AudioEndpointVolume.MasterVolumeLevelScalar = value / 100f;
             _gain = value;
             OnPropertyChanged();
         }
