@@ -119,8 +119,6 @@ public sealed class StethoscopeViewModel : INotifyPropertyChanged, IDisposable
         Mouse.OverrideCursor = Cursors.Wait;
         _setLocked(true);
 
-        _medWandController.SetStethoscopeMode(stethoscopeMode, null);
-
         // Use this call to set the stethoscope mode without using the MedWand SDK audio stack.
         // You will be responsible for using your own audio stack to hear and capture the audio.
         //_medWandController.SetStethoscopeMode(stethoscopeMode);
